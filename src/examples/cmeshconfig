@@ -35,13 +35,13 @@ c = 4;
 xr = 2;
 yr = 2;
 
-x = 4; 
-y = 4;
+x = 2; 
+y = 2;
 
-routing_function = dor_no_express;
+routing_function = xy_yx;
 
-traffic = bitcomp;
-
+traffic = uniform;
+injection_rate = 0.025;
 use_read_write = 0;
 
 batch_size = 2000;
