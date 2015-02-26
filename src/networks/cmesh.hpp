@@ -92,4 +92,7 @@ void dor_cmesh( const Router *r, const Flit *f, int in_channel,
 void dor_no_express_cmesh( const Router *r, const Flit *f, int in_channel, 
 			   OutputSet *outputs, bool inject ) ;
 
+void adaptive_xy_yx_cmesh( const Router *r, const Flit *f, int in_channel,
+         OutputSet *outputs, bool inject ) ;
+
 #endif
