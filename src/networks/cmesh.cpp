@@ -66,6 +66,7 @@ void CMesh::RegisterRoutingFunctions() {
   gRoutingFunctionMap["dor_no_express_cmesh"] = &dor_no_express_cmesh;
   gRoutingFunctionMap["xy_yx_cmesh"] = &xy_yx_cmesh;
   gRoutingFunctionMap["xy_yx_no_express_cmesh"]  = &xy_yx_no_express_cmesh;
+  gRoutingFunctionMap["adaptive_xy_yx_cmesh"] = &adaptive_xy_yx_cmesh;
 }
 
 void CMesh::_ComputeSize( const Configuration &config ) {
@@ -519,6 +520,78 @@ void xy_yx_cmesh( const Router *r, const Flit *f, int in_channel,
   outputs->Clear();
 
   outputs->AddRange( out_port , vcBegin, vcEnd );
+}
+
+void adaptive_xy_yx_cmesh( const Router *r, const Flit *f, 
+     int in_channel, OutputSet *outputs, bool inject )
+{
+  int vcBegin = 0, vcEnd = gNumVCs-1;
+  if ( f->type == Flit::READ_REQUEST ) {
+    vcBegin = gReadReqBeginVC;
+    vcEnd = gReadReqEndVC;
+  } else if ( f->type == Flit::WRITE_REQUEST ) {
+    vcBegin = gWriteReqBeginVC;
+    vcEnd = gWriteReqEndVC;
+  } else if ( f->type ==  Flit::READ_REPLY ) {
+    vcBegin = gReadReplyBeginVC;
+    vcEnd = gReadReplyEndVC;
+  } else if ( f->type ==  Flit::WRITE_REPLY ) {
+    vcBegin = gWriteReplyBeginVC;
+    vcEnd = gWriteReplyEndVC;
+  }
+  assert(((f->vc >= vcBegin) && (f->vc <= vcEnd)) || (inject && (f->vc < 0)));
+
+  int out_port;
+
+  if(inject) {
+
+    out_port = -1;
+
+  } else if(r->GetID() == CMesh::NodeToRouter( f->dest )) {
+
+    // at destination router, we don't need to separate VCs by dim order
+    out_port = CMesh::NodeToPort( f->dest );  
+
+  } else {
+
+    //each class must have at least 2 vcs assigned or else xy_yx will deadlock
+    int const available_vcs = (vcEnd - vcBegin + 1) / 2;
+    assert(available_vcs > 0);
+    
+    int out_port_xy = cmesh_xy( r->GetID(), CMesh::NodeToRouter( f->dest ));
+    int out_port_yx = cmesh_yx( r->GetID(), CMesh::NodeToRouter( f->dest ));
+
+    // Route order (XY or YX) determined when packet is injected
+    //  into the network, adaptively
+    bool x_then_y;
+    if(in_channel >= gC){
+      x_then_y =  (f->vc < (vcBegin + available_vcs));
+    } else {
+      int credit_xy = r->GetUsedCredit(out_port_xy);
+      int credit_yx = r->GetUsedCredit(out_port_yx);
+      if(credit_xy > credit_yx) {
+  x_then_y = false;
+      } else if(credit_xy < credit_yx) {
+  x_then_y = true;
+      } else {
+  x_then_y = (RandomInt(1) > 0);
+      }
+    }
+    
+    if(x_then_y) {
+      out_port = out_port_xy;
+      vcEnd -= available_vcs;
+    } else {
+      out_port = out_port_yx;
+      vcBegin += available_vcs;
+    }
+
+  }
+
+  outputs->Clear();
+
+  outputs->AddRange( out_port , vcBegin, vcEnd );
+  
 }
 
 // ----------------------------------------------------------------------
