@@ -1,0 +1,20 @@
+topology = cmesh;
+
+k = 4;
+n = 2;
+c = 4;
+xr = 2;
+yr = 2;
+
+x = 2;
+y = 2;
+
+routing_function = geneticRouting;
+
+traffic = uniform;
+injection_rate = 0.025;
+use_read_write = 0;
+
+batch_size = 2000;
+
+gpmode = 1;

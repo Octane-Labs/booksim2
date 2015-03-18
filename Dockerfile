@@ -14,3 +14,4 @@ ADD https://github.com/Octane-Labs/booksim2/archive/GenXYZ.zip /tmp/
 RUN unzip /tmp/GenXYZ.zip -d /tmp
 RUN cd /tmp/booksim2-GenXYZ/src/ && make -j 8
 RUN cp /tmp/booksim2-GenXYZ/src/booksim /usr/bin/
+RUN cp /tmp/booksim2-GenXYZ/src/GenXYZConfig /usr/bin/

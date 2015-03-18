@@ -36,6 +36,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 */
 #include <sys/time.h>
 #include <pthread.h>
+#include <string.h>
 
 #include <string>
 #include <cstdlib>
@@ -93,7 +94,7 @@ ostream * gWatchOut;
 
 int threadCount;
 
-char* gGPEndoint;
+char* gGPEndpoint;
 
 /////////////////////////////////////////////////////////////////////////////
 
@@ -153,14 +154,16 @@ bool Simulate( BookSimConfig const & config )
   return result;
 }
 
-int spawnBooksim(int argc, char **argv) {
+int spawnBooksim(char *filename) {
 
   BookSimConfig config;
 
-  if ( !ParseArgs( &config, argc, argv ) ) {
-    cerr << "Usage: " << argv[0] << " configfile... [param=value...]" << endl;
-    return 0;
+  if ( !ParseArgs( &config,filename) ) {
+    //cerr << "Usage: " << argv[0] << " configfile... [param=value...]" << endl;
+    return -1;
   }
+
+  cout<<"Parsed config"<<endl;
 
   /*initialize routing, traffic, injection functions
   */
@@ -190,9 +193,37 @@ int main( int argc, char **argv )
 {
   threadCount = 0;
   zsock_t *rep = zsock_new_rep("tcp://*:9999");
-  char* req = zstr_recv(rep);
-  cout<<req;
-  zstr_free(&req);
+  const char* REQ_STRING = "START BOOKSIM";
+  const char* REP_STRING1 = "BOOKSIM OK";
+  const char* REP_STRING2 = "EP OK. BOOKSIM STARTED";
+
+  char* filename = "/usr/bin/GenXYZConfig";
+
+  while(1) {
+    char* req = zstr_recv(rep);
+    string request = string(req);
+    cout<<request.compare(REQ_STRING)<<endl;
+    if(request.compare(REQ_STRING) == 0) {
+      cout<<zstr_send(rep,REP_STRING1)<<endl;
+    } else {
+      cout<<"Invalid command "<<request<<endl;
+    }
+    zstr_free(&req);
+    req = zstr_recv(rep);
+    cout<<"Received endpoint : "<<req<<endl;
+    gGPEndpoint = new char[128];
+    strcpy(gGPEndpoint,req);
+    zstr_free(&req);
+    cout<<"Sent start final ack"<<endl;
+    zstr_send(rep,REP_STRING2);
+    try {
+      spawnBooksim(filename);
+    } catch(exception e) {
+      delete trafficManager;
+        cout<<"Unstable simulation for current gene. Continuing with next gene.."<<endl;
+    }
+  }
+
   zsock_destroy(&rep);
 
 }
