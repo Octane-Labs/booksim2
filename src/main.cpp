@@ -192,7 +192,7 @@ int main( int argc, char **argv )
   zsock_t *rep = zsock_new_rep("tcp://*:9999");
   char* req = zstr_recv(rep);
   cout<<req;
-  zstr_free(req);
-  zsock_destroy(rep);
+  zstr_free(&req);
+  zsock_destroy(&rep);
 
 }
