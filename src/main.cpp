@@ -37,6 +37,7 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include <sys/time.h>
 #include <pthread.h>
 #include <string.h>
+#include <mcheck.h>
 
 #include <string>
 #include <cstdlib>
@@ -55,7 +56,6 @@ SOFTWARE, EVEN IF ADVISED OF THE POSSIBILITY OF SUCH DAMAGE.
 #include "network.hpp"
 #include "injection.hpp"
 #include "power_module.hpp"
-
 
 
 ///////////////////////////////////////////////////////////////////////////////
@@ -95,12 +95,15 @@ ostream * gWatchOut;
 int threadCount;
 
 char* gGPEndpoint;
+zsock_t* sock;
+
+vector<Network *> net;
 
 /////////////////////////////////////////////////////////////////////////////
 
 bool Simulate( BookSimConfig const & config )
 {
-  vector<Network *> net;
+  cout<<"Inside simulate";
 
   int subnets = config.GetInt("subnets");
   /*To include a new network, must register the network here
@@ -168,7 +171,7 @@ int spawnBooksim(char *filename) {
   /*initialize routing, traffic, injection functions
   */
   InitializeRoutingMap( config );
-
+  cout<<"inited routing map"<<endl;
   gPrintActivity = (config.GetInt("print_activity") > 0);
   gTrace = (config.GetInt("viewer_trace") > 0);
 
@@ -184,6 +187,7 @@ int spawnBooksim(char *filename) {
 
   /*configure and run the simulator
   */
+  cout<<"Gna simulate"<<endl;
   bool result = Simulate( config );
   return result ? -1 : 0;
 
@@ -191,39 +195,29 @@ int spawnBooksim(char *filename) {
 
 int main( int argc, char **argv )
 {
+  // mtrace();
   threadCount = 0;
-  zsock_t *rep = zsock_new_rep("tcp://*:9999");
-  const char* REQ_STRING = "START BOOKSIM";
-  const char* REP_STRING1 = "BOOKSIM OK";
-  const char* REP_STRING2 = "EP OK. BOOKSIM STARTED";
-
+  int run_count = 0;
   char* filename = "/usr/bin/GenXYZConfig";
 
-  while(1) {
-    char* req = zstr_recv(rep);
-    string request = string(req);
-    cout<<request.compare(REQ_STRING)<<endl;
-    if(request.compare(REQ_STRING) == 0) {
-      cout<<zstr_send(rep,REP_STRING1)<<endl;
-    } else {
-      cout<<"Invalid command "<<request<<endl;
-    }
-    zstr_free(&req);
-    req = zstr_recv(rep);
-    cout<<"Received endpoint : "<<req<<endl;
-    gGPEndpoint = new char[128];
-    strcpy(gGPEndpoint,req);
-    zstr_free(&req);
-    cout<<"Sent start final ack"<<endl;
-    zstr_send(rep,REP_STRING2);
+    gGPEndpoint = "tcp://192.168.59.3:11112";
     try {
+      sock = zsock_new_req(gGPEndpoint);
+      // if(run_count == 1)
+      // mtrace();
       spawnBooksim(filename);
     } catch(exception e) {
+      for (int i=0; i<net.size(); i++) {
+
+        delete net[i];
+      }
+
+      net.clear();
       delete trafficManager;
+      trafficManager = NULL;
         cout<<"Unstable simulation for current gene. Continuing with next gene.."<<endl;
     }
-  }
-
-  zsock_destroy(&rep);
+    zsock_destroy(&sock);
+    // delete gGPEndPoint;
 
 }

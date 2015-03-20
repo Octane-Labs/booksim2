@@ -678,24 +678,28 @@ void TrafficManager::_RetireFlit( Flit *f, int dest )
         err << "Flit " << f->id << " arrived at incorrect output " << dest;
 
         // cout<<gGPEndpoint<<endl;
-        zsock_t *sock = zsock_new_req(gGPEndpoint);
+        zsock_t *final_sock = zsock_new_req(gGPEndpoint);
         int interruptValue = 0xCAFE;
         cout<<"err send1"<<endl;
-        zsock_send(sock,"b",&interruptValue,sizeof(interruptValue));
+        zsock_send(final_sock,"b",&interruptValue,sizeof(interruptValue));
         cout<<"Sent interrupt"<<endl;
         //dummy reply
-        char* response = zstr_recv(sock);
+        char* response = zstr_recv(final_sock);
         zstr_free(&response);
 
         //Send Packet latency for CLass 0 PHY
         double fitness = 1.7976931348623157e108;//max double value
         cout<<"err send2"<<endl;
-        zsock_send(sock,"b",&fitness,sizeof(fitness));
+        zsock_send(final_sock,"b",&fitness,sizeof(fitness));
         cout<<"err send2 end"<<endl;
         //dummy reply
-        response = zstr_recv(sock);
+        response = zstr_recv(final_sock);
         zstr_free(&response);
-        zsock_destroy(&sock);
+        zsock_destroy(&final_sock);
+        if(final_sock != NULL) {
+          cout<<"final sock not null"<<endl;
+        }
+        throw 12;
         // ~TrafficManager();
         //Error( err.str( ) );
     }
@@ -1674,6 +1678,30 @@ bool TrafficManager::Run( )
 
         if ( !_SingleSim( ) ) {
             cout << "Simulation unstable, ending ..." << endl;
+            if(GPMode) {
+              zsock_t *final_sock = zsock_new_req(gGPEndpoint);
+              int interruptValue = 0xCAFE;
+              // cout<<"err send1"<<endl;
+              zsock_send(final_sock,"b",&interruptValue,sizeof(interruptValue));
+              // cout<<"Sent interrupt"<<endl;
+              //dummy reply
+              char* response = zstr_recv(final_sock);
+              zstr_free(&response);
+
+              //Send Packet latency for CLass 0 PHY
+              double fitness = 1000.0;
+              // cout<<"err send2"<<endl;
+              cout<<fitness<<endl;
+              zsock_send(final_sock,"b",&fitness,sizeof(fitness));
+              // cout<<"err send2 end"<<endl;
+              //dummy reply
+              response = zstr_recv(final_sock);
+              zstr_free(&response);
+              zsock_destroy(&final_sock);
+              if(final_sock != NULL) {
+                cout<<"final sock not null"<<endl;
+              }
+            }
             return false;
         }
 
@@ -2116,24 +2144,28 @@ void TrafficManager::DisplayStats(ostream & os) const {
 }
 
 void TrafficManager::GPSendStats() const {
-  cout<<"Possible gene"<<endl;
-  zsock_t *sock = zsock_new_req(gGPEndpoint);
+  //cout<<"Possible gene"<<endl;
+  zsock_t *final_sock = zsock_new_req(gGPEndpoint);
   int interruptValue = 0xCAFE;
-  zsock_send(sock,"b",&interruptValue,sizeof(interruptValue));
+  zsock_send(final_sock,"b",&interruptValue,sizeof(interruptValue));
 
   //dummy reply
-  char* response = zstr_recv(sock);
+  char* response = zstr_recv(final_sock);
   zstr_free(&response);
 
   //Send Packet latency for CLass 0 PHY
+
   double fitness = _overall_avg_plat[0];
-  zsock_send(sock,"b",&fitness,sizeof(fitness));
+  zsock_send(final_sock,"b",&fitness,sizeof(fitness));
 
   //dummy reply
-  response = zstr_recv(sock);
+  response = zstr_recv(final_sock);
   zstr_free(&response);
 
-  zsock_destroy(&sock);
+  zsock_destroy(&final_sock);
+  if(final_sock != NULL) {
+    cout<<"final sock not null"<<endl;
+  }
 }
 
 void TrafficManager::DisplayOverallStats( ostream & os ) const {

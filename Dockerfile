@@ -13,5 +13,6 @@ RUN cd /tmp && git clone https://github.com/zeromq/czmq && cd czmq && ./autogen.
 ADD https://github.com/Octane-Labs/booksim2/archive/GenXYZ.zip /tmp/
 RUN unzip /tmp/GenXYZ.zip -d /tmp
 RUN cd /tmp/booksim2-GenXYZ/src/ && make -j 8
-RUN cp /tmp/booksim2-GenXYZ/src/booksim /usr/bin/
+RUN cp /tmp/booksim2-GenXYZ/src/booksim2 /usr/bin/
 RUN cp /tmp/booksim2-GenXYZ/src/GenXYZConfig /usr/bin/
+RUN cd /tmp/booksim2-GenXYZ/ && g++ main2.cpp -o booksim -lczmq -lzmq -lpthread && cp ./main /usr/bin/booksim

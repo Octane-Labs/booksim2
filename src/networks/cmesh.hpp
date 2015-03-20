@@ -75,6 +75,8 @@ private:
   int _xrouter;
   int _yrouter;
   bool _express_channels;
+
+  zsock_t *sock;
 };
 
 //

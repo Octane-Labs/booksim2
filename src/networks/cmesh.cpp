@@ -53,7 +53,8 @@ int CMesh::_memo_NodeShiftX = 0 ;
 int CMesh::_memo_NodeShiftY = 0 ;
 int CMesh::_memo_PortShiftY = 0 ;
 
-extern char* gGPEndpoint;
+
+extern zsock_t *sock;
 
 CMesh::CMesh( const Configuration& config, const string & name )
   : Network(config, name)
@@ -360,7 +361,7 @@ int requestGPBroker(int* output_ports, int* credits,int cx, int cy, int dx, int 
   // }
   // zstr_free(&req);
   // zsock_destroy(&rep);
-  zsock_t *sock = zsock_new_req(gGPEndpoint);
+  // zsock_t *sock = zsock_new_req(gGPEndpoint);
   int msg[12]; //this will be received by the ByteBuffer which will in turn be converted to IntBuffer
   for(int i=0;i<4;i++) {
     msg[i] = output_ports[i];
@@ -370,19 +371,18 @@ int requestGPBroker(int* output_ports, int* credits,int cx, int cy, int dx, int 
   msg[9] = cy;
   msg[10] = dx;
   msg[11] = dy;
-  cout<<"inside requestGPBroker: gna send"<<endl;
+  // cout<<"inside requestGPBroker: gna send"<<endl;
   if(sock == NULL) {
-    sock = zsock_new_req(gGPEndpoint);
+    cout<<"zsock NULL"<<endl;
   }
   zsock_send(sock,"b",msg,12*sizeof(int));
-  cout<<"sent rgpbrkr"<<endl;
+  // cout<<"sent rgpbrkr"<<endl;
   int *outport = NULL;
   int op;
   // cout<<"inside requestGPBroker: waiting for reply"<<endl;
   int size = 0;
   zsock_recv(sock,"b",&outport,&size);
   op = *outport;
-  zsock_destroy(&sock);
   free(outport);
   // cout<<"inside requestGPBroker: got reply :"<<*outport<<" of size "<<size<<endl;
   return op+gC;
