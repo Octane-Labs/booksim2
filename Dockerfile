@@ -15,4 +15,4 @@ RUN unzip /tmp/GenXYZ.zip -d /tmp
 RUN cd /tmp/booksim2-GenXYZ/src/ && make -j 8
 RUN cp /tmp/booksim2-GenXYZ/src/booksim2 /usr/bin/
 RUN cp /tmp/booksim2-GenXYZ/src/GenXYZConfig /usr/bin/
-RUN cd /tmp/booksim2-GenXYZ/ && g++ main2.cpp -o booksim -lczmq -lzmq -lpthread && cp ./main /usr/bin/booksim
+RUN cd /tmp/booksim2-GenXYZ/ && g++ main2.cpp -o booksim -lczmq -lzmq -lpthread && cp ./main /usr/bin/booksim && chmod +x /usr/bin/booksim
