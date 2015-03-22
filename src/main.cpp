@@ -104,6 +104,7 @@ vector<Network *> net;
 bool Simulate( BookSimConfig const & config )
 {
   cout<<"Inside simulate";
+  cout.flush();
 
   int subnets = config.GetInt("subnets");
   /*To include a new network, must register the network here
@@ -203,6 +204,7 @@ int main( int argc, char **argv )
     gGPEndpoint = "tcp://192.168.59.3:11112";
     try {
       sock = zsock_new_req(gGPEndpoint);
+      cout<<sock;
       // if(run_count == 1)
       // mtrace();
       spawnBooksim(filename);
