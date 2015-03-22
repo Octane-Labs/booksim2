@@ -371,20 +371,20 @@ int requestGPBroker(int* output_ports, int* credits,int cx, int cy, int dx, int 
   msg[9] = cy;
   msg[10] = dx;
   msg[11] = dy;
-  // cout<<"inside requestGPBroker: gna send"<<endl;
+   cout<<"inside requestGPBroker: gna send"<<endl;
   if(sock == NULL) {
     cout<<"zsock NULL"<<endl;
   }
   zsock_send(sock,"b",msg,12*sizeof(int));
-  // cout<<"sent rgpbrkr"<<endl;
+   cout<<"sent rgpbrkr"<<endl;
   int *outport = NULL;
   int op;
-  // cout<<"inside requestGPBroker: waiting for reply"<<endl;
+   cout<<"inside requestGPBroker: waiting for reply"<<endl;
   int size = 0;
   zsock_recv(sock,"b",&outport,&size);
   op = *outport;
   free(outport);
-  // cout<<"inside requestGPBroker: got reply :"<<*outport<<" of size "<<size<<endl;
+   cout<<"inside requestGPBroker: got reply :"<<*outport<<" of size "<<size<<endl;
   return op+gC;
 }
 
